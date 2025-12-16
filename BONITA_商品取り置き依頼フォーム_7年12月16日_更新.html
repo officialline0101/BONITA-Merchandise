@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BONITA 商品取り置き依頼</title>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        /* --- 変数定義 (BONITAカラー) --- */
+        :root {
+            --primary-color: #d4d845; /* サイトのライムイエロー */
+            --primary-light: #f4f6d8;
+            --text-color: #4a4a4a;
+            --accent-black: #333333;
+            --bg-color: #fdfdfb;
+            --border-radius: 4px;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#ecece2 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 20px;
+            padding-bottom: 60px;
+            color: var(--text-color);
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            width: 95%;
+            max-width: 500px;
+            padding: 25px;
+            box-sizing: border-box;
+            border-top: 5px solid var(--primary-color);
+        }
+
+        /* --- タイポグラフィ & ヘッダー --- */
+        h1 {
+            font-family: 'Shippori Mincho', serif;
+            color: var(--accent-black);
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-2deg);
+            width: 80%;
+            height: 40px;
+            background-color: var(--primary-color);
+            opacity: 0.4;
+            z-index: -1;
+            border-radius: 20% 80% 20% 80% / 80% 20% 80% 20%;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: var(--text-color);
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            line-height: 1.6;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* --- ラベルデザイン --- */
+        .label {
+            font-family: 'Shippori Mincho', serif;
+            display: flex;
+            align-items: center;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--accent-black);
+            font-size: 18px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .step-num {
+            display: inline-block;
+            background-color: var(--accent-black);
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-right: 8px;
+            font-family: sans-serif;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            margin-left: auto;
+            font-weight: normal;
+        }
+        .req { background: #d9534f; color: white; }
+
+        /* --- 入力フォーム --- */
+        input[type="text"], input[type="tel"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 16px;
+            background: #fafafa;
+            transition: 0.3s;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--primary-color);
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212, 216, 69, 0.2);
+        }
+
+        /* --- 選択ボタングループ --- */
+        .selection-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .selection-group button {
+            flex: 1 1 45%;
+            padding: 12px 5px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+        }
+
+        .selection-group button.active {
+            background-color: var(--accent-black);
+            color: var(--primary-color);
+            border-color: var(--accent-black);
+            font-weight: bold;
+        }
+
+        #categoryGroup button {
+            flex: 1 1 30%;
+        }
+
+        /* --- 商品リスト・数量選択エリア --- */
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: var(--border-radius);
+        }
+        
+        .item-name {
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            padding: 2px;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: #fff;
+            color: var(--accent-black);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qty-btn:active { transform: scale(0.95); }
+
+        .qty-display {
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .item-row.inactive .qty-control {
+            display: none;
+        }
+        .item-row.inactive {
+            opacity: 0.7;
+        }
+        .item-row.inactive::after {
+            content: '選択';
+            font-size: 12px;
+            color: #999;
+            border: 1px solid #ddd;
+            padding: 4px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        /* --- サブメニュー表示制御 --- */
+        .sub-menu-content {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 予約内容確認テーブル（新レイアウト） --- */
+        .summary-section {
+            margin-top: 30px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .summary-header {
+            background-color: var(--primary-color);
+            color: var(--accent-black);
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        /* サマリー内の各ブロック */
+        .summary-block {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-block:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-block-title {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-value {
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--accent-black);
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* 編集ボタン */
+        .edit-btn {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            color: #666;
+            font-size: 11px;
+            padding: 2px 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .edit-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .save-btn {
+            background: var(--accent-black);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            padding: 6px 12px;
+            cursor: pointer;
+            margin-top: 5px;
+            display: block;
+            width: 100px;
+            text-align: center;
+        }
+
+        /* 商品テーブル */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .summary-table td {
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+        .empty-cart-msg {
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* サマリー内の数量変更ボタン */
+        .summary-qty-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .summary-qty-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- 送信ボタン --- */
+        .submit-button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: var(--border-radius);
+            background-color: var(--accent-black);
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Shippori Mincho', serif;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        /* --- モバイル調整 --- */
+        @media (max-width: 600px) {
+            .container { padding: 15px; width: 100%; border-radius: 0; min-height: 100vh; }
+            h1 { font-size: 20px; }
+            #categoryGroup button { flex: 1 1 45%; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>商品取り置き依頼</h1>
+        
+        <div class="info-text">
+            ご希望の商品と個数を選択し、<br>ご予約内容をご確認の上送信してください。
+        </div>
+
+        <div class="label"><span class="step-num">1</span>お客様情報 <span class="badge req">必須</span></div>
+        <input type="text" id="userName" placeholder="お名前 (例: 山田 花子)" style="margin-bottom:10px;">
+        <input type="tel" id="userPhone" placeholder="お電話番号 (例: 090-1234-5678)">
+
+        <div class="label"><span class="step-num">2</span>購入履歴 <span class="badge req">必須</span></div>
+        <div class="selection-group" id="historyGroup">
+            <button type="button" onclick="selectHistory(this, 'Yes')">あり</button>
+            <button type="button" onclick="selectHistory(this, 'No')">なし (初めて)</button>
+        </div>
+        <div id="historyDetailArea" style="display:none; margin-top:10px;">
+            <textarea id="pastProductName" rows="2" placeholder="以前購入した商品名があればご記入ください"></textarea>
+        </div>
+
+        <div class="label"><span class="step-num">3</span>商品選択 <span class="badge req">必須</span></div>
+        <div style="font-size:12px; color:#666; margin-bottom:10px;">カテゴリを選択すると詳細が表示されます</div>
+        
+        <div class="selection-group" id="categoryGroup">
+            <button type="button" onclick="toggleCategory('femcare')">フェムケア</button>
+            <button type="button" onclick="toggleCategory('nail')">ネイル</button>
+            <button type="button" onclick="toggleCategory('enzyme')">酵素</button>
+            <button type="button" onclick="toggleCategory('aroma')">アロマ</button>
+            <button type="button" onclick="toggleCategory('v3')">V3</button>
+            <button type="button" onclick="toggleCategory('cosmetics')">基礎化粧品</button>
+        </div>
+
+        <div id="product-list-container">
+            </div>
+
+        <div class="label"><span class="step-num">4</span>受取希望日時 <span class="badge req">必須</span></div>
+        <div class="selection-group" id="pickupGroup">
+            <button type="button" onclick="selectPickup(this, 'visit')">施術日に受け取る</button>
+            <button type="button" onclick="selectPickup(this, 'designate')">日時を指定する</button>
+        </div>
+        <div id="pickupDetailArea" style="display:none; margin-top:10px;">
+            <textarea id="pickupDateText" rows="2" placeholder="例：12月20日の14時頃"></textarea>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-header">ご予約内容確認</div>
+            
+            <div class="summary-block">
+                <div class="summary-block-title">
+                    お客様情報
+                    <button class="edit-btn" onclick="toggleEditMode()">編集</button>
+                </div>
+                
+                <div id="summaryInfoDisplay">
+                    <div id="dispName" class="summary-value" style="margin-bottom:4px;">(未入力)</div>
+                    <div id="dispPhone" class="summary-value" style="font-size:13px; color:#666;">(未入力)</div>
+                </div>
+
+                <div id="summaryInfoEdit" style="display:none; margin-top:5px;">
+                    <input type="text" id="editName" placeholder="お名前" style="margin-bottom:5px; padding:8px; font-size:14px;">
+                    <input type="tel" id="editPhone" placeholder="お電話番号" style="margin-bottom:5px; padding:8px; font-size:14px;">
+                    <button class="save-btn" onclick="applyEditMode()">完了</button>
+                </div>
+            </div>
+
+            <div class="summary-block">
+                <div class="summary-block-title">選択商品</div>
+                <div id="cart-summary">
+                    <div class="empty-cart-msg">商品が選択されていません</div>
+                </div>
+            </div>
+
+            <div class="summary-block">
+                <div class="summary-block-title">受取希望</div>
+                <div id="dispPickup" class="summary-value" style="font-size:14px;">(未選択)</div>
+            </div>
+
+        </div>
+
+        <button class="submit-button" onclick="submitForm()">この内容で依頼する</button>
+    </div>
+
+    <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+
+    <script>
+        // --- データ定義 ---
+        const productsData = {
+            femcare: [
+                { id: 'fem_1', name: 'エメールソア' },
+                { id: 'fem_2', name: 'スキンハプティック' },
+                { id: 'fem_3', name: 'マスキングオイル' },
+                { id: 'fem_4', name: 'ジェルソープ' }
+            ],
+            nail: [
+                { id: 'nail_1', name: 'フラワーオイル' },
+                { id: 'nail_2', name: 'CCオイル' }
+            ],
+            enzyme: [
+                { id: 'enz_1', name: 'ベリー' },
+                { id: 'enz_2', name: 'アセロラ' },
+                { id: 'enz_3', name: 'ストロベリー' }
+            ],
+            aroma: [
+                { id: 'aroma_1', name: '万能アロマバーム' },
+                { id: 'aroma_2', name: 'ブリーズミスト' }
+            ],
+            v3: [
+                { id: 'v3_1', name: 'V3ファンデ(黒)' },
+                { id: 'v3_2', name: 'ブリリアント' },
+                { id: 'v3_3', name: 'VOSパック' }
+            ],
+            cosmetics: [
+                { id: 'cos_1', name: 'クレンジング' },
+                { id: 'cos_2', name: 'ソープ' },
+                { id: 'cos_3', name: 'ウォーター' },
+                { id: 'cos_4', name: 'センシティブジェル' },
+                { id: 'cos_5', name: '日焼け止め' },
+                { id: 'cos_6', name: 'ラッシュセラム' }
+            ]
+        };
+
+        // --- 状態管理 ---
+        let state = {
+            history: '',
+            cart: {}, 
+            pickupType: '',
+            pickupDate: ''
+        };
+
+        let activeCategory = null;
+
+        // --- 初期化 ---
+        document.addEventListener('DOMContentLoaded', function () {
+            // ▼▼▼ 追加：前回の入力内容を復元 ▼▼▼
+            const savedName = localStorage.getItem('name');
+            const savedPhone = localStorage.getItem('phone');
+
+            if (savedName) document.getElementById('userName').value = savedName;
+            if (savedPhone) document.getElementById('userPhone').value = savedPhone;
+            // ▲▲▲▲▲▲
+
+            renderProductLists();
+            setupLiveSync(); // 入力同期と保存の開始
+
+            // 復元した値をサマリーにも反映させるために一度実行
+            updateSummaryInfo();
+            
+            liff.init({ liffId: '2005254357-zKma9BZk' })
+                .then(() => console.log('LIFF init'))
+                .catch((err) => console.error('LIFF error', err));
+        });
+
+        // Step1とサマリー表示のリアルタイム同期 ＆ localStorage保存
+        function setupLiveSync() {
+            const userName = document.getElementById('userName');
+            const userPhone = document.getElementById('userPhone');
+            const pickupDateText = document.getElementById('pickupDateText');
+
+            // 名前入力時 -> サマリー更新 & 保存
+            userName.addEventListener('input', function() {
+                updateSummaryInfo();
+                localStorage.setItem('name', this.value); // 保存
+            });
+            // 電話入力時 -> サマリー更新 & 保存
+            userPhone.addEventListener('input', function() {
+                updateSummaryInfo();
+                localStorage.setItem('phone', this.value); // 保存
+            });
+            // 日時入力時 -> サマリー更新
+            pickupDateText.addEventListener('input', updateSummaryPickup);
+        }
+
+        // サマリーの名前・電話番号を更新する関数
+        function updateSummaryInfo() {
+            const nameVal = document.getElementById('userName').value;
+            const phoneVal = document.getElementById('userPhone').value;
+            
+            document.getElementById('dispName').innerText = nameVal || '(未入力)';
+            document.getElementById('dispPhone').innerText = phoneVal || '(未入力)';
+        }
+
+        // サマリーの受取希望を更新する関数
+        function updateSummaryPickup() {
+            let text = state.pickupType || '(未選択)';
+            if (state.pickupType === '日時を指定する') {
+                const detail = document.getElementById('pickupDateText').value;
+                if(detail) text += `\n${detail}`;
+            }
+            document.getElementById('dispPickup').innerText = text;
+        }
+
+        // --- 編集モード切替 ---
+        function toggleEditMode() {
+            const displayDiv = document.getElementById('summaryInfoDisplay');
+            const editDiv = document.getElementById('summaryInfoEdit');
+            
+            // 編集エリアに現在の値をセット
+            document.getElementById('editName').value = document.getElementById('userName').value;
+            document.getElementById('editPhone').value = document.getElementById('userPhone').value;
+
+            displayDiv.style.display = 'none';
+            editDiv.style.display = 'block';
+        }
+
+        function applyEditMode() {
+            const displayDiv = document.getElementById('summaryInfoDisplay');
+            const editDiv = document.getElementById('summaryInfoEdit');
+
+            // 編集エリアの値をStep1に戻す
+            const newName = document.getElementById('editName').value;
+            const newPhone = document.getElementById('editPhone').value;
+
+            document.getElementById('userName').value = newName;
+            document.getElementById('userPhone').value = newPhone;
+
+            // ★ここでも保存しておく（編集完了時）
+            localStorage.setItem('name', newName);
+            localStorage.setItem('phone', newPhone);
+
+            // 表示を更新
+            updateSummaryInfo();
+
+            displayDiv.style.display = 'block';
+            editDiv.style.display = 'none';
+        }
+
+        // HTML生成関数
+        function renderProductLists() {
+            const container = document.getElementById('product-list-container');
+            container.innerHTML = '';
+
+            for (const [catKey, items] of Object.entries(productsData)) {
+                const catDiv = document.createElement('div');
+                catDiv.id = `list-${catKey}`;
+                catDiv.className = 'sub-menu-content';
+                catDiv.style.display = 'none';
+
+                items.forEach(item => {
+                    catDiv.innerHTML += `
+                        <div class="item-row inactive" id="row-${item.id}" onclick="activateItem('${catKey}', '${item.id}', '${item.name}')">
+                            <div class="item-name">${item.name}</div>
+                            <div class="qty-control" onclick="event.stopPropagation()">
+                                <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
+                                <span class="qty-display" id="qty-${item.id}">0</span>
+                                <button class="qty-btn" onclick="updateQty('${item.id}', 1)">+</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(catDiv);
+            }
+        }
+
+        // --- アクション関数 ---
+
+        // 1. カテゴリ切り替え
+        function toggleCategory(catKey) {
+            document.querySelectorAll('#categoryGroup button').forEach(btn => btn.classList.remove('active'));
+            const btns = document.querySelectorAll('#categoryGroup button');
+            btns.forEach(b => {
+                if(b.onclick.toString().includes(catKey)) b.classList.add('active');
+            });
+
+            document.querySelectorAll('.sub-menu-content').forEach(el => el.style.display = 'none');
+            const target = document.getElementById(`list-${catKey}`);
+            if(target) target.style.display = 'block';
+            
+            activeCategory = catKey;
+        }
+
+        // 2. 商品選択
+        function activateItem(catKey, itemId, itemName) {
+            const row = document.getElementById(`row-${itemId}`);
+            
+            if (!state.cart[itemId] || state.cart[itemId].count === 0) {
+                state.cart[itemId] = {
+                    name: itemName,
+                    count: 1,
+                    category: catKey
+                };
+                updateRowView(itemId);
+                updateSummaryTable();
+            }
+        }
+
+        // 3. 数量変更
+        function updateQty(itemId, delta) {
+            if (!state.cart[itemId]) return;
+
+            state.cart[itemId].count += delta;
+            
+            if (state.cart[itemId].count <= 0) {
+                delete state.cart[itemId];
+                const row = document.getElementById(`row-${itemId}`);
+                if(row) {
+                    row.classList.add('inactive');
+                    row.onclick = function() { 
+                        const cat = row.parentElement.id.replace('list-', '');
+                        const name = row.querySelector('.item-name').innerText;
+                        activateItem(cat, itemId, name);
+                    };
+                }
+            } else {
+                updateRowView(itemId);
+            }
+            updateSummaryTable();
+        }
+
+        // 行の見た目更新
+        function updateRowView(itemId) {
+            if(!state.cart[itemId]) return;
+            const row = document.getElementById(`row-${itemId}`);
+            if(!row) return;
+
+            const qtySpan = document.getElementById(`qty-${itemId}`);
+            
+            row.classList.remove('inactive');
+            qtySpan.innerText = state.cart[itemId].count;
+            row.onclick = null;
+        }
+
+        // 4. 確認テーブル更新
+        function updateSummaryTable() {
+            const container = document.getElementById('cart-summary');
+            const items = Object.values(state.cart);
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="empty-cart-msg">商品が選択されていません</div>';
+                return;
+            }
+
+            const entries = Object.entries(state.cart);
+            let html = '<table class="summary-table"><tbody>';
+            entries.forEach(([itemId, item]) => {
+                html += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td style="text-align:right;">
+                            <div class="summary-qty-wrapper">
+                                <button class="summary-qty-btn" onclick="updateQty('${itemId}', -1)">-</button>
+                                <span style="font-weight:bold; min-width:20px; text-align:center;">${item.count}</span>
+                                <button class="summary-qty-btn" onclick="updateQty('${itemId}', 1)">+</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // 履歴選択
+        function selectHistory(btn, val) {
+            document.querySelectorAll('#historyGroup button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.history = (val === 'Yes') ? 'あり' : 'なし';
+            
+            const area = document.getElementById('historyDetailArea');
+            area.style.display = (val === 'Yes') ? 'block' : 'none';
+        }
+
+        // 受取選択
+        function selectPickup(btn, val) {
+            document.querySelectorAll('#pickupGroup button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.pickupType = (val === 'visit') ? '施術日に受け取る' : '日時を指定する';
+
+            const area = document.getElementById('pickupDetailArea');
+            area.style.display = (val === 'designate') ? 'block' : 'none';
+            
+            // サマリー即時反映
+            updateSummaryPickup();
+        }
+
+        // 送信処理
+        function submitForm() {
+            const name = document.getElementById('userName').value;
+            const phone = document.getElementById('userPhone').value;
+            const pastProduct = document.getElementById('pastProductName').value;
+            const pickupDateText = document.getElementById('pickupDateText').value;
+
+            // バリデーション
+            if (!name) { alert('お名前を入力してください'); return; }
+            if (!phone) { alert('お電話番号を入力してください'); return; }
+            if (!state.history) { alert('購入履歴を選択してください'); return; }
+            if (Object.keys(state.cart).length === 0) { alert('商品を1つ以上選択してください'); return; }
+            if (!state.pickupType) { alert('受取希望日時を選択してください'); return; }
+
+            // メッセージ構築
+            let msg = `≪商品取り置き依頼≫\n\n`;
+            msg += `【お名前】 ${name}\n`;
+            msg += `【電話】 ${phone}\n`;
+            msg += `【履歴】 ${state.history}`;
+            if(state.history === 'あり' && pastProduct) msg += ` (${pastProduct})`;
+            msg += `\n\n`;
+
+            msg += `【注文内容】\n`;
+            let totalQty = 0;
+            for (const item of Object.values(state.cart)) {
+                msg += `・${item.name} × ${item.count}\n`;
+                totalQty += item.count;
+            }
+            msg += `----------------\n合計: ${totalQty}点\n\n`;
+
+            msg += `【受取】 ${state.pickupType}`;
+            if(state.pickupType === '日時を指定する' && pickupDateText) {
+                msg += `\n(${pickupDateText})`;
+            }
+
+            // 送信
+            if (!liff.isInClient()) {
+                alert('LINEアプリ外でのテスト送信:\n\n' + msg);
+            } else {
+                liff.sendMessages([{ type: 'text', text: msg }])
+                    .then(() => {
+                        alert('依頼を送信しました');
+                        liff.closeWindow();
+                    })
+                    .catch((err) => {
+                        alert('送信エラーが発生しました');
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
