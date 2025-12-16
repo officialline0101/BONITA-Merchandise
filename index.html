@@ -806,7 +806,7 @@
             } else {
                 liff.sendMessages([{ type: 'text', text: msg }])
                     .then(() => {
-                        alert('依頼を送信しました');
+                        alert('依頼を送信しました。スタッフが返信しますので、少々お待ちください。');
                         liff.closeWindow();
                     })
                     .catch((err) => {
@@ -817,4 +817,5 @@
     </script>
 </body>
 </html>
+
 
